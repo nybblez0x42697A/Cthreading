@@ -2,10 +2,13 @@
 #define THREAD_POOL_H
 
 #include <stdbool.h>
+#include <pthread.h>
 
 typedef void (*job_f)(_Atomic bool *should_shutdown, void *arg);
 
 typedef struct threadpool threadpool_t;
+pthread_mutex_t cleanup_mutex;
+pthread_cond_t cleanup_cond;
 
 threadpool_t *thpool_init(int num_threads);
 int           thpool_add_work(threadpool_t *pool, job_f function, void *arg);
