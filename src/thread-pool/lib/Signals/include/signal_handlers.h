@@ -7,7 +7,7 @@
 #include <stdatomic.h>
 #include <signal.h>
 
-typedef void (*func)(void * arg);
+typedef void (*func)(int signal);
 typedef struct cleaner cleaner_t;
 cleaner_t              clean;
 

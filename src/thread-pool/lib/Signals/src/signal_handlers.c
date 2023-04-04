@@ -11,10 +11,9 @@
 void
 handleSIGINT(int signal)
 {
-    (void)signal;
+    // (void)signal;
     printf("\nReceived SIGINT (Ctrl+C)\n");
-    clean.cleanup_f(clean.items);
-    // exit(0);
+    clean.cleanup_f(signal);
 }
 
 void

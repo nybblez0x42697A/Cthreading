@@ -41,15 +41,17 @@ main_cleanup()
             pthread_cond_wait(&cleanup_cond, &cleanup_mutex);
         }
         pthread_mutex_unlock(&cleanup_mutex);
-        thpool_destroy(temp_pool);
     }
-    for (int count = 0; count < clean.num_items; count++)
-    {
-        if (clean.items)
-        {
-            free(clean.items[count]);
-        }
-    }
+    // for (int count = 0; count < clean.num_items; count++)
+    // {
+    //     if (clean.items)
+    //     {
+    //         free(clean.items[count]);
+    //         clean.items[count] = NULL;
+    //     }
+    // }
+    // thpool_destroy(temp_pool);
+    // exit(0);
     // free(clean.items);
 }
 
@@ -78,8 +80,8 @@ main()
 
     printf("Initializing thread pool with %d threads...\n", num_threads);
     threadpool_t * pool = thpool_init(num_threads);
-    temp_pool = pool;
-    clean.cleanup_f = main_cleanup;
+    temp_pool           = pool;
+    clean.cleanup_f     = main_cleanup;
 
     if (!pool)
     {
@@ -102,12 +104,18 @@ main()
     printf("Waiting for jobs to complete...\n");
     thpool_wait(pool);
 
-    printf("Destroying thread pool...\n");
-    thpool_destroy(pool);
+    if (pool)
+    {
+        printf("Destroying thread pool...\n");
+        thpool_destroy(pool);
+    }
 
     printf("Done.\n");
 
-    free(job_ids);
+    if (job_ids != NULL)
+    {
+        free(job_ids);
+    }
 
     return 0;
 }

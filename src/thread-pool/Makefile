@@ -1,4 +1,4 @@
-.PHONY: all clean check debug profile break valgrind design writeup testplan libraries
+.PHONY: all clean check debug profile break valgrind helgrind design writeup testplan libraries
 # ----- Includes ----- #
 includes :=
 # ----- End Includes ----- #
@@ -12,6 +12,9 @@ CFLAGS += -D_POSIX_C_SOURCE
 # LIB_FLAGS := -D_MAIN_EXCLUDED
 TST_FLAGS :=
 #-------- End GCC Flags ---------#
+
+VALGRIND_FLAGS := --leak-check=full --tool=memcheck --show-leak-kinds=all 
+VALGRIND_FLAGS += --show-reachable=yes --track-origins=yes --error-exitcode=1
 
 ############ Directories ############
 SRC_DIR := src
@@ -121,9 +124,10 @@ debug: clean all
 	@gdb --args $(EXE) $(EXE_ARGS)
 #	@lldb $(DEBUG_EXE) $(EXE_ARGS)
 
+helgrind: VALGRIND_FLAGS += --tool=helgrind
+helgrind: valgrind
 valgrind: debug
-	@valgrind --leak-check=full --tool=memcheck --show-leak-kinds=all --show-reachable=yes --track-origins=yes --error-exitcode=1 -s ./$(EXE) $(EXE_ARGS)
-
+	@valgrind $(VALGRIND_FLAGS) -s ./$(EXE) $(EXE_ARGS)
 break_lib: $(EXE)
 	@for element in {1..20} ; do \
 	$(EXE) /dev/urandom; \
