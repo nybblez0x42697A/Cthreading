@@ -2,6 +2,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
 #include <sys/signal.h>
@@ -13,7 +14,7 @@ handleSIGINT(int signal)
     (void)signal;
     printf("\nReceived SIGINT (Ctrl+C)\n");
     clean.cleanup_f(clean.items);
-    exit(0);
+    // exit(0);
 }
 
 void
@@ -51,10 +52,12 @@ SignalHandler
 registerSignalHandler(int signal, SignalHandler handler)
 {
     struct sigaction newAction;
+    memset(&newAction, 0, sizeof(struct sigaction));
     struct sigaction oldAction;
+    memset(&oldAction, 0, sizeof(struct sigaction));
     newAction.sa_handler = handler;
     sigemptyset(&newAction.sa_mask);
-    // newAction.sa_flags = SIG_DFL;
+    // newAction.sa_flags = SA_RESTART;
 
     if (sigaction(signal, &newAction, &oldAction) < 0)
     {
@@ -88,7 +91,7 @@ main()
     int default_handlers_installed = 0;
     if (!default_handlers_installed)
     {
-        install_default_signal_handlers(NULL);
+        install_default_signal_handlers();
         default_handlers_installed = 1;
     }
 }

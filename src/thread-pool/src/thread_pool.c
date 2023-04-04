@@ -127,6 +127,7 @@ thpool_worker(void * thpool)
 
         pthread_mutex_lock(&pool->resource_lock);
         pool->threads_running--;
+        pthread_cond_signal(&cleanup_cond);
         pthread_cond_signal(&pool->notify_threads);
         pthread_mutex_unlock(&pool->resource_lock);
     }
@@ -138,25 +139,37 @@ thpool_worker(void * thpool)
     pthread_exit(NULL);
 }
 
-void
-thpool_wait(threadpool_t * pool)
-{
-    if (!pool)
-    {
+void thpool_wait_for_jobs(threadpool_t *pool) {
+    if (!pool) {
         return;
     }
 
     pthread_mutex_lock(&pool->resource_lock);
 
-    while (pool->jobs_in_queue > 0 || pool->threads_running > 0)
-    {
-        if (pool->threads_running == 0)
-        {
+    while (pool->jobs_in_queue > 0) {
+        pthread_cond_wait(&pool->notify_threads, &pool->resource_lock);
+    }
+
+    pthread_mutex_unlock(&pool->resource_lock);
+}
+
+
+void thpool_wait(threadpool_t *pool) {
+    if (!pool) {
+        return;
+    }
+
+    pthread_mutex_lock(&pool->resource_lock);
+
+    while (pool->jobs_in_queue > 0 || pool->threads_running > 0) {
+        if (pool->threads_running == 0) {
             pthread_cond_broadcast(&pool->notify_threads);
         }
 
-        pthread_mutex_unlock(&pool->resource_lock);
+        pthread_cond_wait(&pool->notify_threads, &pool->resource_lock);
     }
+
+    pthread_mutex_unlock(&pool->resource_lock);
 }
 
 void

@@ -15,6 +15,7 @@ LIB_SRC_DIRS := $(dir $(wildcard $(DIR)/**/*.c $(DIR)/*.c))
 $(info LIB_SRC_DIRS = $(LIB_SRC_DIRS))
 
 LIB_OBJ_DIR := $(word 1, $(subst /, ,$(dir $(LIB_SRC_DIRS))))/obj
+OBJ_DIR := obj
 $(info LIB_OBJ_DIR = $(LIB_OBJ_DIR))
 ############ End Directories ############
 
@@ -22,8 +23,12 @@ $(info LIB_OBJ_DIR = $(LIB_OBJ_DIR))
 LIB_SRCS := $(wildcard $(DIR)/**/*.c $(DIR)/*.c)
 $(info LIB_SRCS = $(LIB_SRCS))
 LIB_OBJS := $(patsubst $(LIB_SRC_DIRS)%.c,$(LIB_OBJ_DIR)/%.o,$(LIB_SRCS))
+# OBJS := $(patsubst $(LIB_SRC_DIRS)%.c,$(LIB_OBJ_DIR)/%.o,$(LIB_SRCS))
 $(info LIB_OBJS = $(LIB_OBJS))
 LIBS := $(patsubst %.c, %.so, $(dir $(LIB_SRC_DIRS))lib_$(notdir $(LIB_SRCS)))
+EXES := $(patsubst %.c, %.a, $(dir $(LIB_SRC_DIRS))$(notdir $(LIB_SRCS))) 
+
+$(info EXES = $(EXES))
 $(info LIBS = $(LIBS))
 DEBUG_LIBS := $(patsubst %.c, %.so, $(dir $(LIB_SRCS_DIRS))lib_$(notdir $(LIB_SRCS)))
 $(info DEBUG_LIBS = $(DEBUG_LIBS))
@@ -36,7 +41,7 @@ CC := gcc
 #-------- Targets ---------#
 # imported:
 # 	echo "$(LIB_SRCS) was imported."
-all: $(LIB_OBJS) $(LIBS)
+all: $(LIB_OBJS) $(OBJS) $(EXES) $(LIBS)
 
 check: $(CHECK)
 
@@ -58,7 +63,7 @@ break: $(EXE)
 	$(EXE) /dev/zero; \
 	done
 
-$(LIB_OBJ_DIR) $(LIB_SRC_DIRS):
+$(LIB_OBJ_DIR) $(LIB_SRC_DIRS) $(OBJ_DIR):
 	@mkdir -p $@
 
 $(LIB_OBJS) $(CHECK): | $(LIB_OBJ_DIR)
@@ -67,9 +72,16 @@ $(LIB_OBJS): $(LIB_SRCS)
 	$(info making $(LIB_OBJS))
 	@$(CC) $(CFLAGS) -D_MAIN_EXCLUDED -c -fPIC $<  -o $@
 
+# $(OBJS): $(LIB_SRCS)
+# 	$(info making $(OBJS))
+# 	@$(CC) $(CFLAGS) $<  -o $@
+
 $(LIBS): $(LIB_OBJS)
 	# $(info making $(LIBS))
 	@$(CC) $(CFLAGS) -D_MAIN_EXCLUDED -shared $< -o $@ $(LIB_FLAGS)
+
+$(EXES): $(LIB_OBJS)
+	@$(CC) $(CFLAGS) $< -o $@
 
 $(CHECK): $(TST_OBJS) $(LIB_OBJS)
 	$(info making $(CHECK) with these flags: $(CFLAGS) $(LIB_FLAGS))
